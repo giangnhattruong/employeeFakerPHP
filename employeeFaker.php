@@ -594,10 +594,9 @@ $departments = [
     new Department("Management", 45, 30, 10, 10, 5),
     new Department("Sale", 15, 15, 20, 30, 20)
 ];
-$deptProps = [25, 35, 20, 10, 10];
+$deptProps = [25, 35, 20, 5, 15];
 $organization = new Organization("ABC-const", $departments, $deptProps, 300);
 $randomEmployees = generateRandomPeopleInOrganization($organization);
 
 $data = $serializer->serialize($randomEmployees, 'json');
 echo($data);
-// var_dump($faker->dateTimeBetween('-2 years', '-1 years')->format('Y-m-d'));
