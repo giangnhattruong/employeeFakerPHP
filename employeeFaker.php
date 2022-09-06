@@ -9,6 +9,9 @@ const ONE_HUNDRED_PERCENT = 100;
 // Get faker
 $faker = Faker\Factory::create('ja_JP');
 
+// Get serializer
+$serializer = JMS\Serializer\SerializerBuilder::create()->build();
+
 class People {
     private string $fullName;
     private string $gender;
@@ -549,19 +552,12 @@ function generateRandomPeople(int $count, int $minAge, int $maxAge, string $depa
         $randGenderIndex = mt_rand(0, 1);
         $gender = $genders[$randGenderIndex];
         // Generate random birth date
-        $birthDate = getBirthDateInAgeRange($minAge, $maxAge);
+        $birthDate = $faker->dateTimeBetween('-'.$maxAge.' years', '-'.$minAge.' years')->format('Y-m-d');
         // Generate random name
         $fullName = $faker->kanaName($gender);
         $people[] = new People($fullName, $gender, $birthDate, $departmentName);
     }
     return $people;
-}
-
-function getBirthDateInAgeRange(int $minAge, int $maxAge) {
-    $fromDate = Carbon::now()->subYears($maxAge);
-    $toDate = Carbon::now()->subYears($minAge);
-    $randomTimestamp = mt_rand($fromDate->timestamp, $toDate->timestamp);
-    return Carbon::createFromTimestamp($randomTimestamp)->format('Y-m-d');
 }
 
 function callAPI($method, $url, $data = false)
@@ -600,5 +596,8 @@ $departments = [
 ];
 $deptProps = [25, 35, 20, 10, 10];
 $organization = new Organization("ABC-const", $departments, $deptProps, 300);
+$randomEmployees = generateRandomPeopleInOrganization($organization);
 
-var_dump(generateRandomPeopleInOrganization($organization));
+$data = $serializer->serialize($randomEmployees, 'json');
+echo($data);
+// var_dump($faker->dateTimeBetween('-2 years', '-1 years')->format('Y-m-d'));
