@@ -6,6 +6,9 @@ use Carbon\Carbon;
 
 const ONE_HUNDRED_PERCENT = 100;
 
+// Get faker
+$faker = Faker\Factory::create('ja_JP');
+
 class People {
     private string $fullName;
     private string $gender;
@@ -532,14 +535,23 @@ function generateRandomPeopleInAgeGroups(Department $department) {
 }
 
 function generateRandomPeople(int $count, int $minAge, int $maxAge, string $departmentName) {
+    global $faker;
     $people = [];
     for ($i=0; $i < $count; $i++) { 
-        $jsonData = callAPI('GET', 'https://randomuser.me/api/?inc=gender,name');
-        $data = json_decode($jsonData, true);
-        $name = $data['results'][0]['name'];
-        $fullName = $name['title'].' '.$name['first'].' '.$name['last'];
-        $gender = $data['results'][0]['gender'];
+        // $jsonData = callAPI('GET', 'https://randomuser.me/api/?inc=gender,name');
+        // $data = json_decode($jsonData, true);
+        // $name = $data['results'][0]['name'];
+        // $fullName = $name['title'].' '.$name['first'].' '.$name['last'];
+        // $gender = $data['results'][0]['gender'];
+
+        // Generate random gender
+        $genders = ['male', 'female'];
+        $randGenderIndex = mt_rand(0, 1);
+        $gender = $genders[$randGenderIndex];
+        // Generate random birth date
         $birthDate = getBirthDateInAgeRange($minAge, $maxAge);
+        // Generate random name
+        $fullName = $faker->kanaName($gender);
         $people[] = new People($fullName, $gender, $birthDate, $departmentName);
     }
     return $people;
