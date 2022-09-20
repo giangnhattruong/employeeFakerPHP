@@ -598,6 +598,7 @@ function exportCsv($data, $fileName) {
         fputcsv($fp, explode(",", $line));
     }
     fclose($fp);
+    echo("Exported to csv successfully");
 }
 
 $departments = [
@@ -612,9 +613,8 @@ $organization = new Organization("ABC-const", $departments, $deptProps, 300);
 
 try {
     $randomEmployees = generateRandomPeopleInOrganization($organization);
-    // $data = $serializer->serialize($randomEmployees, 'json');
-    // $decode = json_decode($data, true);
-    // var_dump($data);
+    $data = $serializer->serialize($randomEmployees, 'json');
+    var_dump($data);
     $lines = [];
     foreach ($randomEmployees as $employee) {
         $lines[] = $employee->getLineData();
