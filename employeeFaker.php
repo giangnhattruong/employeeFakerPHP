@@ -106,8 +106,17 @@ class People {
     public function setDepartment($department)
     {
         $this->department = $department;
-
         return $this;
+    }
+
+    public function getLineData() {
+        return $this->fullName
+            .","
+            .$this->gender
+            .","
+            .$this->birthDate
+            .","
+            .$this->department;
     }
 }
 
@@ -459,14 +468,16 @@ function generateRandomPeopleInOrganization(Organization $organization) {
     $totalEmployees = $organization->getTotalEmployee();
     // Validate organization input
     if (!$organization->validateProps()) {
-        echo('Invalid organization input!');
-        return;
+        // echo('Invalid organization input!');
+        // return [];
+        throw new InvalidArgumentException('Invalid organization input!');
     }
     // Validate department probabilities
     foreach ($departments as $dept) {
         if (!$dept->validateProps()) {
-            echo('Invalid department '.$dept->getName().' probabilities!');
-            return;
+            // echo('Invalid department '.$dept->getName().' probabilities!');
+            // return [];
+            throw new InvalidArgumentException('Invalid department '.$dept->getName().' probabilities!');
         }
     }
     // Set department counts
@@ -541,12 +552,6 @@ function generateRandomPeople(int $count, int $minAge, int $maxAge, string $depa
     global $faker;
     $people = [];
     for ($i=0; $i < $count; $i++) { 
-        // $jsonData = callAPI('GET', 'https://randomuser.me/api/?inc=gender,name');
-        // $data = json_decode($jsonData, true);
-        // $name = $data['results'][0]['name'];
-        // $fullName = $name['title'].' '.$name['first'].' '.$name['last'];
-        // $gender = $data['results'][0]['gender'];
-
         // Generate random gender
         $genders = ['male', 'female'];
         $randGenderIndex = mt_rand(0, 1);
@@ -587,16 +592,55 @@ function callAPI($method, $url, $data = false)
     return $result;
 }
 
+function exportCsv($data, $fileName) {
+    $fp = fopen($fileName, 'w');
+    foreach ($data as $line) {
+        fputcsv($fp, explode(",", $line));
+    }
+    fclose($fp);
+}
+
 $departments = [
     new Department("BIM", 35, 15, 20, 10, 20),
     new Department("IT", 25, 10, 15, 20, 30),
     new Department("Design", 10, 15, 20, 25, 30),
-    new Department("Management", 45, 30, 10, 10, 5),
+    new Department("Management", 15, 30, 40, 10, 5),
     new Department("Sale", 15, 15, 20, 30, 20)
 ];
 $deptProps = [25, 35, 20, 5, 15];
 $organization = new Organization("ABC-const", $departments, $deptProps, 300);
-$randomEmployees = generateRandomPeopleInOrganization($organization);
 
-$data = $serializer->serialize($randomEmployees, 'json');
-echo($data);
+try {
+    $randomEmployees = generateRandomPeopleInOrganization($organization);
+    // $data = $serializer->serialize($randomEmployees, 'json');
+    // $decode = json_decode($data, true);
+    // var_dump($data);
+    $lines = [];
+    foreach ($randomEmployees as $employee) {
+        $lines[] = $employee->getLineData();
+    }
+    exportCsv($lines, "newData.csv");
+    var_dump($lines);
+} catch (InvalidArgumentException $ex) {
+    echo($ex->getMessage());
+}
+
+// $limelight = new Limelight\Limelight();
+// $results = $limelight->parse('庭でライムを育てています。');
+// echo 'Romaji: ' . $results->string('romaji', ' ') . "\n";
+
+// Read & write data
+// $handle = fopen("data.txt", "r");
+// $lines = [];
+// if (($handle = fopen("data.txt", "r")) !== FALSE) {
+//     while (($data = fgetcsv($handle, 1000, "\t")) !== FALSE) {
+//         // var_dump($data[0]);
+//         $lines[] = $data[0];
+//     }
+//     fclose($handle);
+// }
+// $fp = fopen('data.csv', 'w');
+// foreach ($lines as $line) {
+//     fputcsv($fp, explode(",", $line));
+// }
+// fclose($fp);

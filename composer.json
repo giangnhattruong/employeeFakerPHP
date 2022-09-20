@@ -2,6 +2,7 @@
     "require": {
         "nesbot/carbon": "^2.62",
         "jms/serializer": "^3.18",
-        "fakerphp/faker": "^1.20"
+        "fakerphp/faker": "^1.20",
+        "nihongodera/limelight": "^1.4"
     }
 }
