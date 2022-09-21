@@ -72,14 +72,14 @@ class People {
     private string $gender;
     private int $age;
     private string $title;
-    private string $department;
+    private ?string $department = null;
 
     public function __construct(
         $fullName,
         $gender,
         $age,
         $title,
-        $department
+        $department = null
     ) {
         $this->setFullName($fullName);
         $this->setGender($gender);
@@ -657,7 +657,6 @@ function makeAllChiefs($department, $currentPeople) {
     $rs = makeOneTitleChiefs($shuninCount, TITLE_SHUNIN, $currentPeople, $createdIndexes);
     $currentPeople = $rs['people'];
     $createdIndexes = $rs['indexes'];
-    var_dump($createdIndexes);
     return $currentPeople;
 }
 
@@ -687,49 +686,18 @@ function getPutIndex($currentPeople, $createdIndexes) {
     return $putIndex;
 }
 
-function generateRandomPeople(int $count, int $minAge, int $maxAge, string $title, string $departmentName) {
+function generateRandomPeople(int $count, int $minAge, int $maxAge, string $title, string $departmentName = null) {
     global $faker;
     $people = [];
-    for ($i=0; $i < $count; $i++) { 
-        // Generate random gender
+    for ($i=0; $i < $count; $i++) {
         $genders = ['male', 'female'];
         $randGenderIndex = mt_rand(0, 1);
         $gender = $genders[$randGenderIndex];
-        // Generate random birth date
-        // $birthDate = $faker->dateTimeBetween('-'.$maxAge.' years', '-'.$minAge.' years')->format('Y-m-d');
         $age = $faker->numberBetween($minAge, $maxAge);
-        // Generate random name
         $fullName = $faker->name($gender);
         $people[] = new People($fullName, $gender, $age, $title, $departmentName);
     }
     return $people;
-}
-
-function callAPI($method, $url, $data = false)
-{
-    $curl = curl_init();
-    switch ($method)
-    {
-        case "POST":
-            curl_setopt($curl, CURLOPT_POST, 1);
-            if ($data)
-                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-            break;
-        case "PUT":
-            curl_setopt($curl, CURLOPT_PUT, 1);
-            break;
-        default:
-            if ($data)
-                $url = sprintf("%s?%s", $url, http_build_query($data));
-    }
-    // Optional Authentication:
-    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-    curl_setopt($curl, CURLOPT_USERPWD, "username:password");
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    $result = curl_exec($curl);
-    curl_close($curl);
-    return $result;
 }
 
 function exportCsv($data, $fileName) {
@@ -746,78 +714,67 @@ function exportCsv($data, $fileName) {
     echo("Exported to csv successfully");
 }
 
-$ageProp = [
-    '20-29' => 40,
-    '30-39' => 10,
-    '40-49' => 35,
-    '50-59' => 10,
-    '60-69' => 5
+$total = 300;
+$input = [45, 10, 10, 30, 5];
+$input1 = [45, 10, 10, 30, 5];
+$input2 = [10, 10, 30, 30, 20];
+$input3 = [40, 10, 35, 10, 5];
+$countA = (int) ($input[0] * $total) / 100;
+$countB = (int) ($input[1] * $total) / 100;
+$countC = (int) ($input[2] * $total) / 100;
+$countD = (int) ($input[3] * $total) / 100;
+$countE = $total - array_sum([$countA, $countB, $countC, $countD]);
+$groupAPeople = generateRandomPeople($countA, 20, 29, TITLE_OTHERS);
+$groupBPeople = generateRandomPeople($countB, 30, 39, TITLE_OTHERS);
+$groupCPeople = generateRandomPeople($countC, 40, 49, TITLE_OTHERS);
+$groupDPeople = generateRandomPeople($countD, 50, 59, TITLE_OTHERS);
+$groupEPeople = generateRandomPeople($countE, 60, 69, TITLE_OTHERS);
+$randPeople = [
+    ...$groupAPeople,
+    ...$groupBPeople,
+    ...$groupCPeople,
+    ...$groupDPeople,
+    ...$groupEPeople,
 ];
-$ageProp1 = [
-    '20-29' => 45,
-    '30-39' => 10,
-    '40-49' => 10,
-    '50-59' => 30,
-    '60-69' => 5
-];
-$ageProp2 = [
-    '20-29' => 10,
-    '30-39' => 10,
-    '40-49' => 30,
-    '50-59' => 30,
-    '60-69' => 20
-];
-$ageProp3 = [
-    '20-29' => 40,
-    '30-39' => 10,
-    '40-49' => 35,
-    '50-59' => 10,
-    '60-69' => 5
-];
-$deptProp = [15, 35, 20, 20, 10];
-$deptProp1 = [45, 25, 10, 10, 10];
-$deptProp2 = [10, 30, 20, 10, 30];
-$deptProp3 = [15, 35, 20, 20, 10];
+shuffle($randPeople);
+var_dump($randPeople);
 
-$departments = [
-    new Department(DEPT_SALE, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
-    new Department(DEPT_MANAGEMENT, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
-    new Department(DEPT_DEVELOPMENT, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
-    new Department(DEPT_CONSTRUCTION, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
-    new Department(DEPT_DESIGN, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69'])
-];
-$organization = new Organization("ABC-const", $departments, $deptProp, 300);
+$deptPercent = [25, 10, 10, 25, 30];
+$deptPercent1 = [25, 10, 10, 25, 30];
+$deptPercent2 = [30, 10, 5, 30, 25];
+$deptPercent3 = [25, 15, 40, 10, 10];
+$deptCountA = (int) ($deptPercent[0] * $total) / 100;
+$deptCountB = (int) ($deptPercent[1] * $total) / 100;
+$deptCountC = (int) ($deptPercent[2] * $total) / 100;
+$deptCountD = (int) ($deptPercent[3] * $total) / 100;
+$deptCountE = $total - array_sum([$deptCountA, $deptCountB, $deptCountC, $deptCountD]);
 
-try {
-    $randomEmployees = generateRandomPeopleInOrganization($organization);
-    $data = $serializer->serialize($randomEmployees, 'json');
-    // var_dump($data);
-    $lines = [];
-    foreach ($randomEmployees as $employee) {
-        $lines[] = $employee->getLineData();
+$createDept = function($title, $fromIndex) use($total) {
+    for ($i = 0; $i < $total; $i++) {
+
     }
-    exportCsv($lines, "newData4.csv");
-    // var_dump($lines);
-} catch (InvalidArgumentException $ex) {
-    echo($ex->getMessage());
 }
 
-// $limelight = new Limelight\Limelight();
-// $results = $limelight->parse('庭でライムを育てています。');
-// echo 'Romaji: ' . $results->string('romaji', ' ') . "\n";
 
-// Read & write data
-// $handle = fopen("data.txt", "r");
-// $lines = [];
-// if (($handle = fopen("data.txt", "r")) !== FALSE) {
-//     while (($data = fgetcsv($handle, 1000, "\t")) !== FALSE) {
-//         // var_dump($data[0]);
-//         $lines[] = $data[0];
+// $departments = [
+//     new Department(DEPT_SALE, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
+//     new Department(DEPT_MANAGEMENT, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
+//     new Department(DEPT_DEVELOPMENT, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
+//     new Department(DEPT_CONSTRUCTION, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69']),
+//     new Department(DEPT_DESIGN, $ageProp['20-29'], $ageProp['30-39'], $ageProp['40-49'], $ageProp['50-59'], $ageProp['60-69'])
+// ];
+// $organization = new Organization("ABC-const", $departments, $deptProp, 300);
+
+// try {
+//     $randomEmployees = generateRandomPeopleInOrganization($organization);
+//     $data = $serializer->serialize($randomEmployees, 'json');
+//     // var_dump($data);
+//     $lines = [];
+//     foreach ($randomEmployees as $employee) {
+//         $lines[] = $employee->getLineData();
 //     }
-//     fclose($handle);
+//     exportCsv($lines, "newData3.csv");
+//     // var_dump($lines);
+// } catch (InvalidArgumentException $ex) {
+//     echo($ex->getMessage());
 // }
-// $fp = fopen('data.csv', 'w');
-// foreach ($lines as $line) {
-//     fputcsv($fp, explode(",", $line));
-// }
-// fclose($fp);
