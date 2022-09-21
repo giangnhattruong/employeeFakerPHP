@@ -5,37 +5,62 @@ require 'vendor/autoload.php';
 use Carbon\Carbon;
 
 const ONE_HUNDRED_PERCENT = 100;
-const SALE = [
-    'buchou' => 1,
-    'kachou' => 1,
-    'keichou' => 2,
-    'shunin' => 5
+const DEPT_SALE = '営業';
+const DEPT_MANAGEMENT = '管理';
+const DEPT_DEVELOPMENT = '開発';
+const DEPT_CONSTRUCTION = '建設';
+const DEPT_DESIGN = '設計';
+const TITLE_BUCHOU = '部長';
+const TITLE_KACHOU = '課長';
+const TITLE_KEICHOU = '係長';
+const TITLE_SHUNIN = '主任';
+const TITLE_OTHERS = '社員';
+const ROLE_CHIEF_COUNTS = [
+    DEPT_SALE => [
+        TITLE_BUCHOU => 1,
+        TITLE_KACHOU => 1,
+        TITLE_KEICHOU => 2,
+        TITLE_SHUNIN => 5
+    ],
+    DEPT_MANAGEMENT => [
+        TITLE_BUCHOU => 1,
+        TITLE_KACHOU => 2,
+        TITLE_KEICHOU => 3,
+        TITLE_SHUNIN => 5
+    ],
+    DEPT_DEVELOPMENT => [
+        TITLE_BUCHOU => 1,
+        TITLE_KACHOU => 1,
+        TITLE_KEICHOU => 2,
+        TITLE_SHUNIN => 5
+    ],
+    DEPT_CONSTRUCTION => [
+        TITLE_BUCHOU => 1,
+        TITLE_KACHOU => 2,
+        TITLE_KEICHOU => 5,
+        TITLE_SHUNIN => 5
+    ],
+    DEPT_DESIGN => [
+        TITLE_BUCHOU => 1,
+        TITLE_KACHOU => 1,
+        TITLE_KEICHOU => 2,
+        TITLE_SHUNIN => 5
+    ]
 ];
-const MANAGEMENT = [
-    'buchou' => 1,
-    'kachou' => 2,
-    'keichou' => 3,
-    'shunin' => 5
-];
-const DEVELOPMENT = [
-    'buchou' => 1,
-    'kachou' => 1,
-    'keichou' => 2,
-    'shunin' => 5
-];
-const CONSTRUCTION = [
-    'buchou' => 1,
-    'kachou' => 2,
-    'keichou' => 5,
-    'shunin' => 5
-];
-const DESIGN = [
-    'buchou' => 1,
-    'kachou' => 1,
-    'keichou' => 1,
-    'shunin' => 5
-];
+// Get department total chiefs
+$totalSaleChiefCounts = getTotalChiefCounts(SALE);
+$totalManagementChiefCounts = getTotalChiefCounts(MANAGEMENT);
+$totalDevelopmentChiefCounts = getTotalChiefCounts(DEVELOPMENT);
+$totalConstructionChiefCounts = getTotalChiefCounts(CONSTRUCTION);
+$totalDesignChiefCounts = getTotalChiefCounts(DESIGN);
 
+function getTotalChiefCounts($dept) {
+    $count = 0;
+    foreach ($dept as $key => $value) {
+        $count += $value;
+    }
+    return $count;
+}
 // Get faker
 $faker = Faker\Factory::create('ja_JP');
 
@@ -575,6 +600,7 @@ function countFromProbability(int $total, int $propbability) {
 }
 
 /**
+ * Generate department people
  * Group A: 20-29
  * Group B: 30-39
  * Group C: 40-49
@@ -584,11 +610,11 @@ function countFromProbability(int $total, int $propbability) {
 function generateRandomPeopleInAgeGroups(Department $department) {
     try {
         // Generate random people in each group
-        $groupAPeople = generateRandomPeople($department->getGroupACount(), 20, 29, $department->getName());
-        $groupBPeople = generateRandomPeople($department->getGroupBCount(), 30, 39, $department->getName());
-        $groupCPeople = generateRandomPeople($department->getGroupCCount(), 40, 49, $department->getName());
-        $groupDPeople = generateRandomPeople($department->getGroupDCount(), 50, 59, $department->getName());
-        $groupEPeople = generateRandomPeople($department->getGroupECount(), 60, 69, $department->getName());
+        $groupAPeople = generateRandomPeople($department->getGroupACount(), 20, 29, TITLE_OTHERS, $department->getName());
+        $groupBPeople = generateRandomPeople($department->getGroupBCount(), 30, 39, TITLE_OTHERS, $department->getName());
+        $groupCPeople = generateRandomPeople($department->getGroupCCount(), 40, 49, TITLE_OTHERS, $department->getName());
+        $groupDPeople = generateRandomPeople($department->getGroupDCount(), 50, 59, TITLE_OTHERS, $department->getName());
+        $groupEPeople = generateRandomPeople($department->getGroupECount(), 60, 69, TITLE_OTHERS, $department->getName());
         $people = [
             ...$groupAPeople,
             ...$groupBPeople,
@@ -596,10 +622,51 @@ function generateRandomPeopleInAgeGroups(Department $department) {
             ...$groupDPeople,
             ...$groupEPeople,
         ];
+        // From random data, raise(make) chiefs
+        $people = makeAllChiefs($department, $people);
         return $people;
     } catch (Exception $ex) {
         echo $ex->getMessage();
     }
+}
+
+/**
+ * Make department chiefs
+ *
+ * @param [type] $department
+ * @param [type] $currentPeople
+ * @return void
+ */
+function makeAllChiefs($department, $currentPeople) {
+    $deptName = $department->getName();
+    $deptRoleChiefCounts = ROLE_CHIEF_COUNTS[$deptName];
+    $buchouCount = $deptRoleChiefCounts[TITLE_BUCHOU];
+    $kachouCount = $deptRoleChiefCounts[TITLE_KACHOU];
+    $keichouCount = $deptRoleChiefCounts[TITLE_KEICHOU];
+    $shuninCount = $deptRoleChiefCounts[TITLE_SHUNIN];
+    $createFromIndex = 0;
+    $rs = makeOneTitleChiefs($buchouCount, TITLE_BUCHOU, $currentPeople, $createFromIndex);
+    $createFromIndex += $buchouCount;
+    $rs = makeOneTitleChiefs($kachouCount, TITLE_KACHOU, $currentPeople, $createFromIndex);
+    $createFromIndex += $kachouCount;
+    $rs = makeOneTitleChiefs($keichouCount, TITLE_KEICHOU, $currentPeople, $createFromIndex);
+    $createFromIndex += $keichouCount;
+    $rs = makeOneTitleChiefs($shuninCount, TITLE_SHUNIN, $currentPeople, $createFromIndex);
+    return $rs;
+}
+
+/**
+ * Make chiefs of department's specific title
+ *
+ * @param [type] $title
+ * @return void
+ */
+function makeOneTitleChiefs($count, $title, $currentPeople, $createFromIndex) {
+    for ($i = 0; $i < $count; $i++) {
+        $currentPeople[$createFromIndex]->setTitle($title);
+        $createFromIndex++;
+    }
+    return $currentPeople;
 }
 
 function generateRandomPeople(int $count, int $minAge, int $maxAge, string $title, string $departmentName) {
@@ -649,6 +716,9 @@ function callAPI($method, $url, $data = false)
 
 function exportCsv($data, $fileName) {
     $fp = fopen($fileName, 'w');
+    fprintf($fp, chr(0xEF).chr(0xBB).chr(0xBF));
+    $titleLine = 'Name,Gender,Age,Department,Job Title';
+    fputcsv($fp, explode(",", $titleLine));
     foreach ($data as $line) {
         fputcsv($fp, explode(",", $line));
     }
@@ -657,11 +727,11 @@ function exportCsv($data, $fileName) {
 }
 
 $departments = [
-    new Department("営業", 35, 15, 20, 10, 20),
-    new Department("管理", 25, 10, 15, 20, 30),
-    new Department("開発", 10, 15, 20, 25, 30),
-    new Department("建設", 15, 30, 40, 10, 5),
-    new Department("設計", 15, 15, 20, 30, 20)
+    new Department(DEPT_SALE, 35, 15, 20, 10, 20),
+    new Department(DEPT_MANAGEMENT, 25, 10, 15, 20, 30),
+    new Department(DEPT_DEVELOPMENT, 50, 15, 20, 10, 5),
+    new Department(DEPT_CONSTRUCTION, 55, 10, 20, 10, 5),
+    new Department(DEPT_DESIGN, 75, 5, 10, 5, 5)
 ];
 $deptProps = [25, 35, 20, 5, 15];
 $organization = new Organization("ABC-const", $departments, $deptProps, 300);
@@ -678,7 +748,6 @@ try {
     var_dump($lines);
 } catch (InvalidArgumentException $ex) {
     echo($ex->getMessage());
-
 }
 
 // $limelight = new Limelight\Limelight();
