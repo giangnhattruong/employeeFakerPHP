@@ -5,6 +5,36 @@ require 'vendor/autoload.php';
 use Carbon\Carbon;
 
 const ONE_HUNDRED_PERCENT = 100;
+const SALE = [
+    'buchou' => 1,
+    'kachou' => 1,
+    'keichou' => 2,
+    'shunin' => 5
+];
+const MANAGEMENT = [
+    'buchou' => 1,
+    'kachou' => 2,
+    'keichou' => 3,
+    'shunin' => 5
+];
+const DEVELOPMENT = [
+    'buchou' => 1,
+    'kachou' => 1,
+    'keichou' => 2,
+    'shunin' => 5
+];
+const CONSTRUCTION = [
+    'buchou' => 1,
+    'kachou' => 2,
+    'keichou' => 5,
+    'shunin' => 5
+];
+const DESIGN = [
+    'buchou' => 1,
+    'kachou' => 1,
+    'keichou' => 1,
+    'shunin' => 5
+];
 
 // Get faker
 $faker = Faker\Factory::create('ja_JP');
@@ -12,21 +42,25 @@ $faker = Faker\Factory::create('ja_JP');
 // Get serializer
 $serializer = JMS\Serializer\SerializerBuilder::create()->build();
 
+
 class People {
     private string $fullName;
     private string $gender;
-    private string $birthDate;
+    private int $age;
+    private string $title;
     private string $department;
 
     public function __construct(
         $fullName,
         $gender,
-        $birthDate,
+        $age,
+        $title,
         $department
     ) {
         $this->setFullName($fullName);
         $this->setGender($gender);
-        $this->setBirthDate($birthDate);
+        $this->setAge($age);
+        $this->setTitle($title);
         $this->setDepartment($department);
     }
 
@@ -71,22 +105,40 @@ class People {
     }
 
     /**
-     * Get the value of birthDate
+     * Get the value of title
      */ 
-    public function getBirthDate()
+    public function getTitle()
     {
-        return $this->birthDate;
+        return $this->title;
     }
 
     /**
-     * Set the value of birthDate
+     * Set the value of title
      *
      * @return  self
      */ 
-    public function setBirthDate($birthDate)
+    public function setTitle($title)
     {
-        $this->birthDate = $birthDate;
+        $this->title = $title;
+        return $this;
+    }
+    
+    /**
+     * Get the value of age
+     */ 
+    public function getAge()
+    {
+        return $this->age;
+    }
 
+    /**
+     * Set the value of age
+     *
+     * @return  self
+     */ 
+    public function setAge($age)
+    {
+        $this->age = $age;
         return $this;
     }
 
@@ -114,9 +166,11 @@ class People {
             .","
             .$this->gender
             .","
-            .$this->birthDate
+            .$this->age
             .","
-            .$this->department;
+            .$this->department
+            .","
+            .$this->title;
     }
 }
 
@@ -548,7 +602,7 @@ function generateRandomPeopleInAgeGroups(Department $department) {
     }
 }
 
-function generateRandomPeople(int $count, int $minAge, int $maxAge, string $departmentName) {
+function generateRandomPeople(int $count, int $minAge, int $maxAge, string $title, string $departmentName) {
     global $faker;
     $people = [];
     for ($i=0; $i < $count; $i++) { 
@@ -557,10 +611,11 @@ function generateRandomPeople(int $count, int $minAge, int $maxAge, string $depa
         $randGenderIndex = mt_rand(0, 1);
         $gender = $genders[$randGenderIndex];
         // Generate random birth date
-        $birthDate = $faker->dateTimeBetween('-'.$maxAge.' years', '-'.$minAge.' years')->format('Y-m-d');
+        // $birthDate = $faker->dateTimeBetween('-'.$maxAge.' years', '-'.$minAge.' years')->format('Y-m-d');
+        $age = $faker->numberBetween($minAge, $maxAge);
         // Generate random name
-        $fullName = $faker->kanaName($gender);
-        $people[] = new People($fullName, $gender, $birthDate, $departmentName);
+        $fullName = $faker->name($gender);
+        $people[] = new People($fullName, $gender, $age, $title, $departmentName);
     }
     return $people;
 }
@@ -602,11 +657,11 @@ function exportCsv($data, $fileName) {
 }
 
 $departments = [
-    new Department("BIM", 35, 15, 20, 10, 20),
-    new Department("IT", 25, 10, 15, 20, 30),
-    new Department("Design", 10, 15, 20, 25, 30),
-    new Department("Management", 15, 30, 40, 10, 5),
-    new Department("Sale", 15, 15, 20, 30, 20)
+    new Department("営業", 35, 15, 20, 10, 20),
+    new Department("管理", 25, 10, 15, 20, 30),
+    new Department("開発", 10, 15, 20, 25, 30),
+    new Department("建設", 15, 30, 40, 10, 5),
+    new Department("設計", 15, 15, 20, 30, 20)
 ];
 $deptProps = [25, 35, 20, 5, 15];
 $organization = new Organization("ABC-const", $departments, $deptProps, 300);
@@ -623,6 +678,7 @@ try {
     var_dump($lines);
 } catch (InvalidArgumentException $ex) {
     echo($ex->getMessage());
+
 }
 
 // $limelight = new Limelight\Limelight();
